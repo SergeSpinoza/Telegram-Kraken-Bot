@@ -597,6 +597,7 @@ def price_cmd(bot, update):
 
     buttons = [
         KeyboardButton(KeyboardEnum.XBT.clean()),
+        KeyboardButton(KeyboardEnum.BCH.clean()),
         KeyboardButton(KeyboardEnum.ETH.clean()),
         KeyboardButton(KeyboardEnum.LTC.clean()),
         KeyboardButton(KeyboardEnum.XMR.clean()),
@@ -618,7 +619,10 @@ def price_currency(bot, update):
     update.message.reply_text("Retrieving data...")
 
     req_data = dict()
-    req_data["pair"] = "X" + update.message.text + "Z" + config["trade_to_currency"]
+    if update.message.text == "BCH":
+        req_data["pair"] = update.message.text + config["trade_to_currency"]
+    else:
+        req_data["pair"] = "X" + update.message.text + "Z" + config["trade_to_currency"]
 
     # Send request to Kraken to get current trading price for currency-pair
     res_data = kraken.query_public("Ticker", req_data)
@@ -1366,7 +1370,7 @@ price_handler = ConversationHandler(
     entry_points=[CommandHandler('price', price_cmd)],
     states={
         WorkflowEnum.PRICE_CURRENCY:
-            [RegexHandler("^(XBT|ETH|LTC|XMR|XRP)$", price_currency),
+            [RegexHandler("^(XBT|BCH|ETH|LTC|XMR|XRP)$", price_currency),
              RegexHandler("^(CANCEL)$", cancel)]
     },
     fallbacks=[CommandHandler('cancel', cancel)]

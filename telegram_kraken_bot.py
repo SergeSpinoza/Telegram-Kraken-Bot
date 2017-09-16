@@ -60,6 +60,7 @@ class KeyboardEnum(Enum):
     BUY = auto()
     SELL = auto()
     EURO = auto()
+    USD = auto()
     VOLUME = auto()
     ALL = auto()
     YES = auto()
@@ -175,6 +176,7 @@ def trade_buy_sell(bot, update, chat_data):
 
     buttons = [
         KeyboardButton(KeyboardEnum.XBT.clean()),
+        KeyboardButton(KeyboardEnum.BCH.clean()),
         KeyboardButton(KeyboardEnum.ETH.clean()),
         KeyboardButton(KeyboardEnum.LTC.clean()),
         KeyboardButton(KeyboardEnum.XMR.clean()),
@@ -266,6 +268,7 @@ def trade_price(bot, update, chat_data):
 
     buttons = [
         KeyboardButton(KeyboardEnum.EURO.clean()),
+        KeyboardButton(KeyboardEnum.USD.clean()),
         KeyboardButton(KeyboardEnum.VOLUME.clean())
     ]
 
@@ -1346,13 +1349,13 @@ trade_handler = ConversationHandler(
             [RegexHandler("^(BUY|SELL)$", trade_buy_sell, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel)],
         WorkflowEnum.TRADE_CURRENCY:
-            [RegexHandler("^(XBT|ETH|LTC|XMR|XRP)$", trade_currency, pass_chat_data=True),
+            [RegexHandler("^(XBT|ETH|BCH|LTC|XMR|XRP)$", trade_currency, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel),
              RegexHandler("^(ALL)$", trade_sell_all)],
         WorkflowEnum.TRADE_PRICE:
             [RegexHandler("^((?=.*?\d)\d*[.]?\d*)$", trade_price, pass_chat_data=True)],
         WorkflowEnum.TRADE_VOL_TYPE:
-            [RegexHandler("^(EURO|VOLUME)$", trade_vol_type, pass_chat_data=True),
+            [RegexHandler("^(EURO|USD|VOLUME)$", trade_vol_type, pass_chat_data=True),
              RegexHandler("^(ALL)$", trade_vol_type_all, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel)],
         WorkflowEnum.TRADE_VOLUME:

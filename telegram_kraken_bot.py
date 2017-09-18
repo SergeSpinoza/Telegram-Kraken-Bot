@@ -60,7 +60,6 @@ class KeyboardEnum(Enum):
     BUY = auto()
     SELL = auto()
     EURO = auto()
-    USD = auto()
     VOLUME = auto()
     ALL = auto()
     YES = auto()
@@ -250,7 +249,10 @@ def trade_sell_all(bot, update):
 
 # Save currency to trade and enter price per unit to trade
 def trade_currency(bot, update, chat_data):
-    chat_data["currency"] = "X" + update.message.text
+    if update.message.text == "BCH":
+        chat_data["currency"] = update.message.text
+    else:
+        chat_data["currency"] = "X" + update.message.text
 
     reply_msg = "Enter price per unit"
     reply_mrk = ReplyKeyboardRemove()
@@ -268,7 +270,6 @@ def trade_price(bot, update, chat_data):
 
     buttons = [
         KeyboardButton(KeyboardEnum.EURO.clean()),
-        KeyboardButton(KeyboardEnum.USD.clean()),
         KeyboardButton(KeyboardEnum.VOLUME.clean())
     ]
 
@@ -383,9 +384,15 @@ def trade_volume(bot, update, chat_data):
 # This method is used in 'trade_volume' and in 'trade_vol_type_all'
 def show_trade_conf(update, chat_data):
     # Show confirmation for placing order
+    if chat_data["currency"] == "BCH":
+        show_chat_data_currency = chat_data["currency"]
+    else:
+        show_chat_data_currency = chat_data["currency"][1:]
+
     trade_str = (chat_data["buysell"].lower() + " " +
                  trim_zeros(chat_data["volume"]) + " " +
-                 chat_data["currency"][1:] + " @ limit " +
+                 chat_data["currency"] + " @ limit " +
+                 show_chat_data_currency + " @ limit " +
                  chat_data["price"])
 
     # Calculate total value of order
@@ -406,7 +413,10 @@ def trade_confirm(bot, update, chat_data):
 
     req_data = dict()
     req_data["type"] = chat_data["buysell"].lower()
-    req_data["pair"] = chat_data["currency"] + "Z" + config["trade_to_currency"]
+    if chat_data["currency"] == "BCH":
+        req_data["pair"] = chat_data["currency"] + config["trade_to_currency"]
+    else:
+        req_data["pair"] = chat_data["currency"] + "Z" +config["trade_to_currency"]
     req_data["price"] = chat_data["price"]
     req_data["ordertype"] = "limit"
     req_data["volume"] = chat_data["volume"]
@@ -624,8 +634,11 @@ def price_currency(bot, update):
     req_data = dict()
     if update.message.text == "BCH":
         req_data["pair"] = update.message.text + config["trade_to_currency"]
-    else:
+    else: 
         req_data["pair"] = "X" + update.message.text + "Z" + config["trade_to_currency"]
+    
+
+    #req_data["pair"] = "BCH" + config["trade_to_currency"]
 
     # Send request to Kraken to get current trading price for currency-pair
     res_data = kraken.query_public("Ticker", req_data)
@@ -1349,13 +1362,13 @@ trade_handler = ConversationHandler(
             [RegexHandler("^(BUY|SELL)$", trade_buy_sell, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel)],
         WorkflowEnum.TRADE_CURRENCY:
-            [RegexHandler("^(XBT|ETH|BCH|LTC|XMR|XRP)$", trade_currency, pass_chat_data=True),
+            [RegexHandler("^(XBT|BCH|ETH|LTC|XMR|XRP)$", trade_currency, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel),
              RegexHandler("^(ALL)$", trade_sell_all)],
         WorkflowEnum.TRADE_PRICE:
             [RegexHandler("^((?=.*?\d)\d*[.]?\d*)$", trade_price, pass_chat_data=True)],
         WorkflowEnum.TRADE_VOL_TYPE:
-            [RegexHandler("^(EURO|USD|VOLUME)$", trade_vol_type, pass_chat_data=True),
+            [RegexHandler("^(EURO|VOLUME)$", trade_vol_type, pass_chat_data=True),
              RegexHandler("^(ALL)$", trade_vol_type_all, pass_chat_data=True),
              RegexHandler("^(CANCEL)$", cancel)],
         WorkflowEnum.TRADE_VOLUME:
